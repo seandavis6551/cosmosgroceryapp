@@ -1,0 +1,11 @@
+ConfigKey,ConfigValue,Description
+store_name,Cosmos REV,Cosmos REV Grocery
+delivery_fee,25,Flat delivery fee in TTD
+min_order_amount,50,Minimum order value for delivery
+operating_hours,"Mon-Sat 7am-8pm, Sun 8am-4pm",Store opening hours
+contact_phone,1-868-349-2930,Store contact number
+contact_email,CosmosREV@gmail.com,Store contact email
+delivery_radius_km,15,Max delivery distance in km
+currency,TTD,Default currency
+tax_rate,12.5,VAT percentage applied to orders
+max_items_per_order,50,Maximum number of items per order

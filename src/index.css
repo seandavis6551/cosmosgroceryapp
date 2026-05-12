@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light only;
+  }
+  body {
+    font-family: 'Outfit', sans-serif;
+    background-color: #F7F6F3;
+    color: #0f172a;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Cart drawer transition */
+.cart-drawer-enter {
+  transform: translateX(100%);
+}
+.cart-drawer-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms ease-out;
+}

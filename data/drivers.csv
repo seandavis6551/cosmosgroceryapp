@@ -1,0 +1,6 @@
+DriverID,Name,Phone,Email,VehicleType,LicensePlate,IsAvailable
+DRV-001,Marcus Julien,868-784-3312,marcusj@gmail.com,Car,PBK 1234,TRUE
+DRV-002,Sonia Baptiste,868-766-9901,soniab@gmail.com,Motorcycle,MCK 5678,TRUE
+DRV-003,Dario Chance,868-791-2245,darioc@gmail.com,Car,PAL 9012,FALSE
+DRV-004,Kezia Ramkissoon,868-773-4490,keziar@gmail.com,Motorcycle,MBJ 3456,TRUE
+DRV-005,Terrence Phillip,868-799-8812,terrencep@gmail.com,Car,PCK 7890,TRUE

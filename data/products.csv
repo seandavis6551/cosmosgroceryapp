@@ -1,0 +1,16 @@
+ProductID,SKU,Name,Description,CategoryID,UnitPrice,ImageURL,IsActive
+PRD-001,GRO-1001,Carib Lager 330ml,Local Trinidad lager beer,CAT-002,12.5,,TRUE
+PRD-002,GRO-1002,Stag Beer 330ml,Trinidad's strong beer,CAT-002,13,,TRUE
+PRD-003,GRO-1003,Solo Orange 500ml,Local carbonated orange drink,CAT-003,8,,TRUE
+PRD-004,GRO-1004,Chubby Grape 250ml,Children's juice drink,CAT-003,5.5,,TRUE
+PRD-005,GRO-1005,Milo 400g,Chocolate malt drink powder,CAT-003,38,,TRUE
+PRD-006,GRO-1006,Dasheen (per lb),Fresh local root vegetable,CAT-006,6.5,,TRUE
+PRD-007,GRO-1007,Eddoes (per lb),Small local root vegetable,CAT-006,7,,TRUE
+PRD-008,GRO-1008,Plantain (per lb),Ripe plantain,CAT-007,5,,TRUE
+PRD-009,GRO-1009,Julie Mango (each),Local Julie mango,CAT-007,4,,TRUE
+PRD-010,GRO-1010,Farine 500g,Cassava farine local brand,CAT-013,18,,TRUE
+PRD-011,GRO-1011,Crix Original 200g,Local cream crackers,CAT-010,14.5,,TRUE
+PRD-012,GRO-1012,Grace Coconut Milk 400ml,Canned coconut milk,CAT-014,12,,TRUE
+PRD-013,GRO-1013,Chief Pepper Sauce 200ml,Local pepper sauce,CAT-015,22,,TRUE
+PRD-014,GRO-1014,Eggs (tray of 30),Local farm eggs,CAT-008,65,,TRUE
+PRD-015,GRO-1015,Anchor Butter 250g,Salted butter,CAT-008,32,,TRUE

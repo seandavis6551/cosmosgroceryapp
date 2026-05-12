@@ -1,0 +1,9 @@
+SyncID,SyncedAt,RecordsUpdated,Status,ErrorDetail
+SYNC-001,06/05/2026 08:00,15,Success,
+SYNC-002,06/05/2026 14:00,3,Success,
+SYNC-003,07/05/2026 08:00,15,Success,
+SYNC-004,07/05/2026 14:00,7,Success,
+SYNC-005,08/05/2026 08:00,12,Success,
+SYNC-006,08/05/2026 14:00,0,Failed,Connection timeout to POS endpoint
+SYNC-007,08/05/2026 14:15,12,Success,
+SYNC-008,09/05/2026 08:00,15,Success,

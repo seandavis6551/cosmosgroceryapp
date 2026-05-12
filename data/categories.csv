@@ -1,0 +1,16 @@
+CategoryID,Name,ParentCategoryID
+CAT-001,Beverages,
+CAT-002,Alcoholic Beverages,CAT-001
+CAT-003,Non-Alcoholic Beverages,CAT-001
+CAT-004,Provisions,
+CAT-005,Fresh Produce,
+CAT-006,Root Vegetables,CAT-005
+CAT-007,Fruits,CAT-005
+CAT-008,Dairy & Eggs,
+CAT-009,Frozen Foods,
+CAT-010,Snacks & Confectionery,
+CAT-011,Household & Cleaning,
+CAT-012,Personal Care,
+CAT-013,Grains & Cereals,CAT-004
+CAT-014,Canned & Packaged Goods,CAT-004
+CAT-015,Condiments & Sauces,
