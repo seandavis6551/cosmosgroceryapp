@@ -3,6 +3,14 @@
     "rewrite": "/index.html",
     "exclude": ["/assets/*", "/*.{png,jpg,gif,ico,svg,css,js,woff,woff2,webp}"]
   },
+  "mimeTypes": {
+    ".js": "application/javascript",
+    ".mjs": "application/javascript",
+    ".css": "text/css",
+    ".svg": "image/svg+xml",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2"
+  },
   "globalHeaders": {
     "X-Frame-Options": "SAMEORIGIN",
     "X-Content-Type-Options": "nosniff"
