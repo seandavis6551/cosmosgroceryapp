@@ -248,33 +248,53 @@ function HeroBanner() {
       `}</style>
 
       {/* Animated palm tree — right side */}
-      <div className="absolute right-0 bottom-0 pointer-events-none" style={{ width: 160, height: '115%' }}>
-        <svg viewBox="0 0 160 220" fill="none" xmlns="http://www.w3.org/2000/svg"
+      <div className="absolute right-2 bottom-0 pointer-events-none hidden sm:block" style={{ width: 180, height: '130%' }}>
+        <svg viewBox="0 0 180 240" fill="none" xmlns="http://www.w3.org/2000/svg"
           style={{ width: '100%', height: '100%', position: 'absolute', bottom: 0 }}>
           <g className="hero-palm">
-            {/* Trunk */}
-            <path d="M80 220 C78 195, 72 165, 74 138 C76 110, 70 88, 76 68"
-              stroke="rgba(255,255,255,0.35)" strokeWidth="10" strokeLinecap="round" fill="none"/>
-            <path d="M80 220 C78 195, 72 165, 74 138 C76 110, 70 88, 76 68"
-              stroke="rgba(255,255,255,0.15)" strokeWidth="14" strokeLinecap="round" fill="none"/>
-            {/* Fronds */}
+            {/* Trunk — solid warm brown */}
+            <path d="M90 240 C87 210, 80 178, 82 150 C84 122, 77 98, 83 75"
+              stroke="#b5722a" strokeWidth="11" strokeLinecap="round" fill="none"/>
+            <path d="M90 240 C87 210, 80 178, 82 150 C84 122, 77 98, 83 75"
+              stroke="#d4924a" strokeWidth="7" strokeLinecap="round" fill="none"/>
+            {/* Trunk segment marks */}
+            <path d="M87 210 Q84 207 87 204" stroke="#8a5420" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+            <path d="M85 185 Q82 182 85 179" stroke="#8a5420" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+            <path d="M83 160 Q80 157 83 154" stroke="#8a5420" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+
+            {/* Fronds — dark greens, solid and wide */}
             <g className="hero-frond-a">
-              <path d="M76 68 C55 55, 22 48, 6 58 C24 46, 56 50, 76 68Z" fill="rgba(255,255,255,0.28)"/>
-              <path d="M76 68 C62 48, 40 28, 28 22 C42 26, 64 46, 76 68Z" fill="rgba(255,255,255,0.22)"/>
+              {/* Far left */}
+              <path d="M83 75 C68 65, 40 54, 10 62 C8 58, 36 46, 68 58 C72 60, 78 65, 83 75Z" fill="#1a6b2e"/>
+              <path d="M83 75 C68 65, 40 54, 10 62" stroke="#145524" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+              {/* Left */}
+              <path d="M83 75 C72 55, 56 32, 40 22 C36 18, 56 28, 72 50 C76 56, 80 65, 83 75Z" fill="#228b3a"/>
+              <path d="M83 75 C72 55, 56 32, 40 22" stroke="#1a6b2e" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
             </g>
             <g className="hero-frond-b">
-              <path d="M76 68 C90 48, 114 28, 128 22 C112 26, 90 46, 76 68Z" fill="rgba(255,255,255,0.28)"/>
-              <path d="M76 68 C96 55, 128 48, 148 58 C128 46, 96 50, 76 68Z" fill="rgba(255,255,255,0.22)"/>
+              {/* Right */}
+              <path d="M83 75 C94 55, 110 32, 128 22 C132 18, 112 28, 96 50 C92 56, 87 65, 83 75Z" fill="#1a6b2e"/>
+              <path d="M83 75 C94 55, 110 32, 128 22" stroke="#145524" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+              {/* Far right */}
+              <path d="M83 75 C98 65, 128 54, 160 62 C162 58, 132 46, 100 58 C96 60, 90 65, 83 75Z" fill="#228b3a"/>
+              <path d="M83 75 C98 65, 128 54, 160 62" stroke="#1a6b2e" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
             </g>
             <g className="hero-frond-c">
-              <path d="M76 68 C66 42, 52 18, 44 10 C54 18, 68 42, 76 68Z" fill="rgba(255,255,255,0.25)"/>
-              <path d="M76 68 C86 42, 100 18, 108 10 C98 18, 82 42, 76 68Z" fill="rgba(255,255,255,0.25)"/>
-              <path d="M76 68 C73 38, 72 14, 76 4 C80 14, 79 38, 76 68Z" fill="rgba(255,255,255,0.3)"/>
+              {/* Top left */}
+              <path d="M83 75 C74 50, 62 24, 52 12 C48 8, 62 22, 76 48 C79 55, 81 65, 83 75Z" fill="#2da84a"/>
+              <path d="M83 75 C74 50, 62 24, 52 12" stroke="#228b3a" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+              {/* Top */}
+              <path d="M83 75 C80 46, 79 20, 83 6 C87 20, 86 46, 83 75Z" fill="#1a6b2e"/>
+              <path d="M83 75 C80 46, 79 20, 83 6" stroke="#145524" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+              {/* Top right */}
+              <path d="M83 75 C92 50, 106 24, 116 12 C120 8, 106 22, 92 48 C89 55, 86 65, 83 75Z" fill="#228b3a"/>
+              <path d="M83 75 C92 50, 106 24, 116 12" stroke="#1a6b2e" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
             </g>
+
             {/* Coconuts */}
-            <circle cx="70" cy="76" r="6" fill="rgba(255,255,255,0.2)"/>
-            <circle cx="80" cy="80" r="6.5" fill="rgba(255,255,255,0.15)"/>
-            <circle cx="64" cy="82" r="5.5" fill="rgba(255,255,255,0.18)"/>
+            <circle cx="76" cy="84" r="7" fill="#5a2e0e"/>
+            <circle cx="89" cy="87" r="7.5" fill="#4a2508"/>
+            <circle cx="70" cy="90" r="6.5" fill="#6b3812"/>
           </g>
         </svg>
       </div>
