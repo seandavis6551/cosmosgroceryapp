@@ -224,18 +224,60 @@ function HeroBanner() {
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-teal-600 via-teal-500 to-cyan-400
                     -mx-4 md:mx-0 md:rounded-2xl px-6 py-7 md:p-10 mb-0 md:mb-7">
-      {/* Background grocery photo */}
-      <div
-        className="absolute right-0 top-0 bottom-0 w-1/2 pointer-events-none"
-        style={{
-          backgroundImage: 'url(/grocery-cart.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          opacity: 0.18,
-          maskImage: 'linear-gradient(to right, transparent 0%, black 40%)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 40%)',
-        }}
-      />
+      <style>{`
+        @keyframes hero-sway {
+          0%   { transform: rotate(-3deg); }
+          100% { transform: rotate(3deg); }
+        }
+        @keyframes hero-frond-a {
+          0%   { transform: rotate(-5deg); }
+          100% { transform: rotate(5deg); }
+        }
+        @keyframes hero-frond-b {
+          0%   { transform: rotate(4deg); }
+          100% { transform: rotate(-4deg); }
+        }
+        @keyframes hero-frond-c {
+          0%   { transform: rotate(-3deg); }
+          100% { transform: rotate(6deg); }
+        }
+        .hero-palm      { transform-origin: 50% 100%; animation: hero-sway 5s ease-in-out infinite alternate; }
+        .hero-frond-a   { transform-origin: 50% 82%; animation: hero-frond-a 3.5s ease-in-out infinite alternate; }
+        .hero-frond-b   { transform-origin: 50% 82%; animation: hero-frond-b 4.1s ease-in-out infinite alternate; }
+        .hero-frond-c   { transform-origin: 50% 82%; animation: hero-frond-c 3s ease-in-out infinite alternate; }
+      `}</style>
+
+      {/* Animated palm tree — right side */}
+      <div className="absolute right-0 bottom-0 pointer-events-none" style={{ width: 160, height: '115%' }}>
+        <svg viewBox="0 0 160 220" fill="none" xmlns="http://www.w3.org/2000/svg"
+          style={{ width: '100%', height: '100%', position: 'absolute', bottom: 0 }}>
+          <g className="hero-palm">
+            {/* Trunk */}
+            <path d="M80 220 C78 195, 72 165, 74 138 C76 110, 70 88, 76 68"
+              stroke="rgba(255,255,255,0.35)" strokeWidth="10" strokeLinecap="round" fill="none"/>
+            <path d="M80 220 C78 195, 72 165, 74 138 C76 110, 70 88, 76 68"
+              stroke="rgba(255,255,255,0.15)" strokeWidth="14" strokeLinecap="round" fill="none"/>
+            {/* Fronds */}
+            <g className="hero-frond-a">
+              <path d="M76 68 C55 55, 22 48, 6 58 C24 46, 56 50, 76 68Z" fill="rgba(255,255,255,0.28)"/>
+              <path d="M76 68 C62 48, 40 28, 28 22 C42 26, 64 46, 76 68Z" fill="rgba(255,255,255,0.22)"/>
+            </g>
+            <g className="hero-frond-b">
+              <path d="M76 68 C90 48, 114 28, 128 22 C112 26, 90 46, 76 68Z" fill="rgba(255,255,255,0.28)"/>
+              <path d="M76 68 C96 55, 128 48, 148 58 C128 46, 96 50, 76 68Z" fill="rgba(255,255,255,0.22)"/>
+            </g>
+            <g className="hero-frond-c">
+              <path d="M76 68 C66 42, 52 18, 44 10 C54 18, 68 42, 76 68Z" fill="rgba(255,255,255,0.25)"/>
+              <path d="M76 68 C86 42, 100 18, 108 10 C98 18, 82 42, 76 68Z" fill="rgba(255,255,255,0.25)"/>
+              <path d="M76 68 C73 38, 72 14, 76 4 C80 14, 79 38, 76 68Z" fill="rgba(255,255,255,0.3)"/>
+            </g>
+            {/* Coconuts */}
+            <circle cx="70" cy="76" r="6" fill="rgba(255,255,255,0.2)"/>
+            <circle cx="80" cy="80" r="6.5" fill="rgba(255,255,255,0.15)"/>
+            <circle cx="64" cy="82" r="5.5" fill="rgba(255,255,255,0.18)"/>
+          </g>
+        </svg>
+      </div>
 
       <div className="relative">
         <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white
