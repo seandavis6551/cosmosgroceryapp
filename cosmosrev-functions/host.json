@@ -1,0 +1,23 @@
+{
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      }
+    }
+  },
+  "extensionBundle": {
+    "id": "Microsoft.Azure.Functions.ExtensionBundle",
+    "version": "[4.*, 5.0.0)"
+  },
+  "cors": {
+    "allowedOrigins": [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://orange-moss-0f1f60b0f.7.azurestaticapps.net",
+      "https://thankful-sea-03e90740f.7.azurestaticapps.net"
+    ]
+  }
+}
