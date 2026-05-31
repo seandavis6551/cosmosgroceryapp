@@ -410,25 +410,25 @@ function ProductCard({ product }) {
             qty === 0 ? (
               <button
                 onClick={() => addItem(product)}
-                className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-sm font-semibold
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs sm:text-sm font-semibold
                            rounded-full transition-all active:scale-95 shadow-sm shadow-teal-200"
               >
                 Add
               </button>
             ) : (
-              <div className="flex items-center gap-2 bg-teal-50 border border-teal-100 rounded-full px-2 py-1">
+              <div className="flex items-center gap-1 sm:gap-2 bg-teal-50 border border-teal-100 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1">
                 <button
                   onClick={() => removeItem(product)}
-                  className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center
-                             text-lg font-light hover:bg-teal-600 transition-colors leading-none"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-teal-500 text-white flex items-center justify-center
+                             text-base font-light hover:bg-teal-600 transition-colors leading-none"
                 >
                   −
                 </button>
-                <span className="text-sm font-bold text-teal-700 min-w-[16px] text-center">{qty}</span>
+                <span className="text-xs sm:text-sm font-bold text-teal-700 min-w-[14px] text-center">{qty}</span>
                 <button
                   onClick={() => addItem(product)}
-                  className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center
-                             text-lg font-light hover:bg-teal-600 transition-colors leading-none"
+                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-teal-500 text-white flex items-center justify-center
+                             text-base font-light hover:bg-teal-600 transition-colors leading-none"
                 >
                   +
                 </button>
