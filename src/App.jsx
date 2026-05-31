@@ -93,7 +93,7 @@ const ChevronDown = () => (
 // ─── TopNav ───────────────────────────────────────────────────────────────────
 
 function TopNav({ searchQuery, setSearchQuery }) {
-  const { totalItems, setCartOpen } = useContext(CartContext);
+  const { totalItems, subtotal, setCartOpen } = useContext(CartContext);
 
   return (
     <nav className="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
@@ -145,14 +145,21 @@ function TopNav({ searchQuery, setSearchQuery }) {
 
           <button
             onClick={() => setCartOpen(true)}
-            className="relative p-2.5 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-600 transition-colors"
+            className="relative flex items-center gap-2 pl-2.5 pr-3.5 py-2 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-600 transition-colors"
           >
-            <BagIcon />
+            <span className="relative">
+              <BagIcon />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-teal-500
+                                 text-white text-[10px] font-bold flex items-center justify-center px-1
+                                 shadow-sm shadow-teal-300">
+                  {totalItems}
+                </span>
+              )}
+            </span>
             {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[20px] h-5 rounded-full bg-teal-500
-                               text-white text-[11px] font-bold flex items-center justify-center px-1
-                               shadow-sm shadow-teal-300 animate-bounce-once">
-                {totalItems}
+              <span className="text-sm font-bold text-teal-700">
+                ${subtotal.toFixed(2)}
               </span>
             )}
           </button>
