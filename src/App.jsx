@@ -30,10 +30,12 @@ function CartProvider({ children }) {
   const [cartOpen, setCartOpen] = useState(false);
 
   const addItem = (product) =>
-    setCart((prev) => ({
-      ...prev,
-      [product.id]: { product, qty: (prev[product.id]?.qty || 0) + 1 },
-    }));
+    setCart((prev) => {
+      const currentQty = prev[product.id]?.qty || 0
+      const maxQty = product.quantityOnHand ?? Infinity
+      if (currentQty >= maxQty) return prev
+      return { ...prev, [product.id]: { product, qty: currentQty + 1 } }
+    });
 
   const removeItem = (product) =>
     setCart((prev) => {
@@ -367,6 +369,13 @@ function ProductCard({ product }) {
           </div>
         )}
 
+        {product.inStock && product.quantityOnHand !== null && product.quantityOnHand <= 5 && (
+          <div className="absolute top-2 right-2 bg-orange-500 text-white text-[10px] font-bold
+                          px-2 py-0.5 rounded-full shadow-sm">
+            Only {product.quantityOnHand} left
+          </div>
+        )}
+
         {!product.inStock && (
           <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
             <span className="text-xs font-semibold text-slate-500 bg-white px-3 py-1.5
@@ -562,8 +571,10 @@ function CartDrawer({ onCheckout }) {
                     <span className="text-sm font-bold text-slate-700 min-w-[16px] text-center">{qty}</span>
                     <button
                       onClick={() => addItem(product)}
+                      disabled={product.quantityOnHand !== null && qty >= product.quantityOnHand}
                       className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center
-                                 text-lg font-light hover:bg-teal-600 transition-colors leading-none"
+                                 text-lg font-light hover:bg-teal-600 transition-colors leading-none
+                                 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       +
                     </button>

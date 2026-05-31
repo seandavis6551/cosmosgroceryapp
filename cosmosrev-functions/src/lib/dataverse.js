@@ -99,18 +99,34 @@ async function createInventoryRecord(productId) {
 
 // Requires sol_unit and sol_image_url fields on sol_productses in Dataverse
 async function getPublicProducts() {
-  const data = await dvFetch(
-    `sol_productses?$select=sol_productsid,sol_name,sol_unitprice,sol_unit,sol_image_url,_sol_categoryid_value` +
-    `&$filter=statecode eq 0 and sol_isactive eq true&$orderby=sol_name`
-  )
-  return data.value.map((r) => ({
-    id: r.sol_productsid,
-    name: r.sol_name,
-    price: r.sol_unitprice || 0,
-    unit: r.sol_unit || '',
-    imageUrl: r.sol_image_url || null,
-    categoryId: r['_sol_categoryid_value'] || null,
-  }))
+  const [productsData, inventoryData] = await Promise.all([
+    dvFetch(
+      `sol_productses?$select=sol_productsid,sol_name,sol_unitprice,sol_unit,sol_image_url,_sol_categoryid_value` +
+      `&$filter=statecode eq 0 and sol_isactive eq true&$orderby=sol_name`
+    ),
+    dvFetch(
+      `sol_cosmosinventories?$select=sol_quantityonhand,_sol_productid_value&$filter=statecode eq 0`
+    ),
+  ])
+
+  const invMap = {}
+  inventoryData.value.forEach((i) => {
+    if (i._sol_productid_value) invMap[i._sol_productid_value] = i.sol_quantityonhand ?? null
+  })
+
+  return productsData.value.map((r) => {
+    const qty = invMap[r.sol_productsid] ?? null
+    return {
+      id: r.sol_productsid,
+      name: r.sol_name,
+      price: r.sol_unitprice || 0,
+      unit: r.sol_unit || '',
+      imageUrl: r.sol_image_url || null,
+      categoryId: r['_sol_categoryid_value'] || null,
+      quantityOnHand: qty,
+      inStock: qty === null || qty > 0,
+    }
+  })
 }
 
 async function getPublicCategories() {
