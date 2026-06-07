@@ -273,7 +273,12 @@ async function getPublicCategories() {
   }))
 }
 
+async function dvPatchImageUrl(productId, imageUrl) {
+  await dvPatch(`sol_productses(${productId})`, { sol_image_url: imageUrl })
+}
+
 module.exports = {
+  dvPatchImageUrl,
   getAllLoyverseLinkedItems,
   createProductFromLoyverse,
   updateProductBarcode,
