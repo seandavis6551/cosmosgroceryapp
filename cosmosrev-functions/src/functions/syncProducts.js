@@ -16,19 +16,20 @@ app.http('syncProducts', {
 
       for (const product of products) {
         try {
-          // Create item in Loyverse
-          const loyverseItem = await createItem(product)
+          // Look up inventory first so we can set the low-stock threshold on create
+          const inventory = await getInventoryForProduct(product.sol_productsid)
+          const reorderLevel = inventory?.sol_reorderlevel ?? null
+
+          // Create item in Loyverse (with stock tracking + low-stock level)
+          const loyverseItem = await createItem(product, reorderLevel)
           const variantId = loyverseItem.variants?.[0]?.variant_id
 
           // Write Loyverse IDs back to Dataverse
           await updateProductLoyverseIds(product.sol_productsid, loyverseItem.id, variantId)
 
           // Set stock quantity if inventory record exists
-          if (variantId) {
-            const inventory = await getInventoryForProduct(product.sol_productsid)
-            if (inventory && inventory.sol_quantityonhand > 0) {
-              await updateItemStock(variantId, inventory.sol_quantityonhand)
-            }
+          if (variantId && inventory && inventory.sol_quantityonhand > 0) {
+            await updateItemStock(variantId, inventory.sol_quantityonhand)
           }
 
           results.synced.push({ sku: product.sol_sku, name: product.sol_name, loyverseId: loyverseItem.id })
