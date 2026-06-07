@@ -350,7 +350,7 @@ function ProductCard({ product }) {
       {/* Image area */}
       <div className="h-36 relative overflow-hidden">
         {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain p-2" />
         ) : (
           <div className="h-full bg-gradient-to-br from-teal-50 to-teal-100 flex items-center justify-center">
             <span className="text-6xl">🛒</span>
