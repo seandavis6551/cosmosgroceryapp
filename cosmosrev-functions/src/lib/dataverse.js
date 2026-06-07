@@ -235,7 +235,7 @@ async function setInventoryQuantity(productId, quantity) {
 async function getPublicProducts() {
   const [productsData, inventoryData] = await Promise.all([
     dvFetch(
-      `sol_productses?$select=sol_productsid,sol_name,sol_unitprice,sol_unit,sol_image_url,_sol_categoryid_value` +
+      `sol_productses?$select=sol_productsid,sol_name,sol_unitprice,sol_unit,sol_imageurl,_sol_categoryid_value` +
       `&$filter=statecode eq 0 and sol_isactive eq true&$orderby=sol_name`
     ),
     dvFetch(
@@ -255,7 +255,7 @@ async function getPublicProducts() {
       name: r.sol_name,
       price: r.sol_unitprice || 0,
       unit: r.sol_unit || '',
-      imageUrl: r.sol_image_url || null,
+      imageUrl: r.sol_imageurl || null,
       categoryId: r['_sol_categoryid_value'] || null,
       quantityOnHand: qty,
       inStock: qty === null || qty > 0,
