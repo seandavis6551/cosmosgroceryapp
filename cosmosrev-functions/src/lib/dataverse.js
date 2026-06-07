@@ -125,7 +125,7 @@ async function createProductFromLoyverse(item, variantId, price, quantity, barco
 
 async function getUnsyncedProducts() {
   const data = await dvFetch(
-    `sol_productses?$select=sol_productsid,sol_name,sol_sku,sol_unitprice,sol_description,sol_isactive,sol_loyverse_item_id` +
+    `sol_productses?$select=sol_productsid,sol_name,sol_sku,sol_unitprice,sol_description,sol_isactive,sol_loyverse_item_id,sol_imageurl` +
     `&$filter=statecode eq 0 and sol_isactive eq true and sol_loyverse_item_id eq null`
   )
   return data.value
@@ -274,7 +274,7 @@ async function getPublicCategories() {
 }
 
 async function dvPatchImageUrl(productId, imageUrl) {
-  await dvPatch(`sol_productses(${productId})`, { sol_image_url: imageUrl })
+  await dvPatch(`sol_productses(${productId})`, { sol_imageurl: imageUrl })
 }
 
 module.exports = {

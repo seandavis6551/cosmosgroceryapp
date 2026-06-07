@@ -15,6 +15,7 @@ async function createItem(product, reorderLevel = null) {
       item_name: product.sol_name,
       reference_id: product.sol_sku,
       description: product.sol_description || '',
+      image_url: product.sol_imageurl || undefined,
       track_stock: true,
       variants: [{
         default_pricing_type: 'FIXED',
@@ -71,6 +72,7 @@ async function updateItem(loyverseItemId, product, reorderLevel = null, variantI
       item_name: product.sol_name,
       reference_id: product.sol_sku,
       description: product.sol_description || '',
+      image_url: product.sol_imageurl || undefined,
       track_stock: true,
       variants: [variant],
     }),
