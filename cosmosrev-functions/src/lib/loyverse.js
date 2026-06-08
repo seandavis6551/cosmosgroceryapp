@@ -121,6 +121,17 @@ async function getStoreInventory() {
   return { inventory_levels: items }
 }
 
+// All receipts in a created-at window (for the "Pull sales" reconciliation).
+// Cursor-paginated so we get every receipt, not just the first page.
+async function getReceipts({ createdMin, createdMax } = {}) {
+  const params = new URLSearchParams()
+  if (process.env.LOYVERSE_STORE_ID) params.set('store_id', process.env.LOYVERSE_STORE_ID)
+  if (createdMin) params.set('created_at_min', createdMin)
+  if (createdMax) params.set('created_at_max', createdMax)
+  const qs = params.toString()
+  return fetchAllPages(`receipts${qs ? '?' + qs : ''}`, 'receipts')
+}
+
 async function getItem(loyverseItemId) {
   const res = await fetch(`${LOYVERSE_BASE}/items/${loyverseItemId}`, { headers: headers() })
   if (!res.ok) throw new Error(`Loyverse item fetch error ${res.status}: ${await res.text()}`)
@@ -148,4 +159,4 @@ async function updateVariantLowStock(loyverseItemId, variantId, lowStock) {
   return res.json()
 }
 
-module.exports = { createItem, updateItemStock, updateItem, deleteItem, getStoreInventory, getAllItems, getItem, updateVariantLowStock }
+module.exports = { createItem, updateItemStock, updateItem, deleteItem, getStoreInventory, getAllItems, getItem, updateVariantLowStock, getReceipts }

@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { deleteSalesByReceipt, insertReceiptLines } = require('../lib/dataverse')
+const { ingestReceipt } = require('../lib/sales')
 
 // Receives Loyverse "receipts.update" webhooks and logs each receipt's line items
 // into the Dataverse sales ledger (sol_sales). This is the foundation for sales
@@ -47,44 +47,9 @@ app.http('loyverseSalesWebhook', {
       }
 
       try {
-        // Clear any previous version of this receipt first (idempotency).
-        await deleteSalesByReceipt(receiptNumber)
-
-        // Cancelled receipt: lines removed above, nothing to re-insert.
-        if (r.cancelled_at) {
-          skipped.push({ receiptNumber, reason: 'cancelled — lines removed' })
-          continue
-        }
-
-        const isRefund = r.receipt_type === 'REFUND'
-        const sign = isRefund ? -1 : 1
-
-        const lines = (r.line_items || []).map((li, i) => {
-          const quantity = (li.quantity ?? 0) * sign
-          const unitPrice = li.price ?? 0
-          const lineTotal = (li.total_money ?? li.gross_total_money ?? (li.price ?? 0) * (li.quantity ?? 0)) * sign
-          const cost = (li.cost_total ?? (li.cost != null ? li.cost * (li.quantity ?? 0) : null))
-          return {
-            lineNumber: i + 1,
-            itemName: li.item_name || li.variant_name || null,
-            variantId: li.variant_id || null,
-            quantity,
-            unitPrice,
-            lineTotal,
-            cost: cost != null ? cost * sign : null,
-          }
-        })
-
-        const written = await insertReceiptLines(
-          {
-            receiptNumber,
-            receiptType: r.receipt_type || 'SALE',
-            receiptDate: r.receipt_date || r.created_at || new Date().toISOString(),
-            storeId: r.store_id || storeFilter || null,
-          },
-          lines
-        )
-        logged.push({ receiptNumber, type: r.receipt_type, lines: written })
+        const res = await ingestReceipt(r)
+        if (res.action === 'cancelled') skipped.push({ receiptNumber, reason: 'cancelled — lines removed' })
+        else logged.push({ receiptNumber, type: r.receipt_type, lines: res.lines })
       } catch (err) {
         context.log(`sales webhook failed for receipt ${receiptNumber}: ${err.message}`)
         skipped.push({ receiptNumber, reason: err.message })
