@@ -136,6 +136,19 @@ async function createProductFromLoyverse(item, variantId, price, quantity, barco
   return product
 }
 
+// Update editable product fields (category lookup + prices) with the service
+// principal. The inventory app calls this via the updateProduct function so a
+// signed-in user doesn't need Append/AppendTo privilege on the category lookup.
+async function updateProductFields(productId, { categoryId, unitPrice, costPrice } = {}) {
+  const body = {}
+  if (unitPrice !== undefined) body.sol_unitprice = unitPrice
+  if (costPrice !== undefined) body.sol_cost_price = costPrice
+  if (categoryId) body['sol_CategoryID@odata.bind'] = `/sol_categorieses(${categoryId})`
+  if (Object.keys(body).length) await dvPatch(`sol_productses(${productId})`, body)
+  // Explicit null clears the category (disassociate the lookup).
+  if (categoryId === null) await dvDelete(`sol_productses(${productId})/sol_CategoryID/$ref`)
+}
+
 async function getUnsyncedProducts() {
   const data = await dvFetch(
     `sol_productses?$select=sol_productsid,sol_name,sol_sku,sol_unitprice,sol_description,sol_isactive,sol_loyverse_item_id,sol_imageurl` +
@@ -387,4 +400,5 @@ module.exports = {
   getPublicCategories,
   deleteSalesByReceipt,
   insertReceiptLines,
+  updateProductFields,
 }
