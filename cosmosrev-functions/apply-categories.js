@@ -26,6 +26,7 @@ async function dv(method, query, body) {
 
 const RULES = [
   [/dunhill|rothmans|lucky strike/, 'Tobacco'],
+  [/\bkiss\b|\bbread\b|\bbuns?\b|\brolls?\b|wheat hops|cbi wheat/, 'Bakery'],
   [/baby (oil|wipe)/, 'Personal Care'],
   [/peanut butter/, 'Condiments & Sauces'],
   [/(soya?\s*bean oil|soyabean|soysbean|pure .*oil|vegetable oil)/, 'Condiments & Sauces'],
@@ -57,15 +58,18 @@ function nextCat(existing) {
   const cats = (await dv('GET', `sol_categorieses?$select=sol_categoriesid,sol_categoryid,sol_name&$filter=statecode eq 0`)).value
   const byName = {}; cats.forEach((c) => { byName[c.sol_name] = c.sol_categoriesid })
 
-  // Ensure Tobacco exists
-  if (!byName['Tobacco']) {
-    const id = nextCat(cats.map((c) => c.sol_categoryid).filter(Boolean))
-    console.log(`${APPLY ? 'Creating' : 'WOULD create'} category "Tobacco" (${id})`)
+  // Ensure required categories exist (create any that are missing).
+  const allIds = cats.map((c) => c.sol_categoryid).filter(Boolean)
+  for (const catName of ['Tobacco', 'Bakery']) {
+    if (byName[catName]) { console.log(`${catName} category already exists ✓`); continue }
+    const id = nextCat(allIds)
+    allIds.push(id)
+    console.log(`${APPLY ? 'Creating' : 'WOULD create'} category "${catName}" (${id})`)
     if (APPLY) {
-      const created = await dv('POST', 'sol_categorieses', { sol_name: 'Tobacco', sol_categoryid: id })
-      byName['Tobacco'] = created.sol_categoriesid
+      const created = await dv('POST', 'sol_categorieses', { sol_name: catName, sol_categoryid: id })
+      byName[catName] = created.sol_categoriesid
     }
-  } else console.log('Tobacco category already exists ✓')
+  }
 
   const prods = (await dv('GET', `sol_productses?$select=sol_productsid,sol_name,_sol_categoryid_value&$filter=statecode eq 0 and sol_isactive eq true&$orderby=sol_name&$top=400`)).value
 

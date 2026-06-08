@@ -18,6 +18,7 @@ function getCategoryIcon(name) {
   if (n.includes('spice') || n.includes('condiment') || n.includes('sauce')) return '🧂';
   if (n.includes('rice') || n.includes('grain') || n.includes('cereal') || n.includes('pasta')) return '🌾';
   if (n.includes('canned') || n.includes('tin')) return '🥫';
+  if (n.includes('tobacco') || n.includes('cigarette')) return '🚬';
   return '🛒';
 }
 
