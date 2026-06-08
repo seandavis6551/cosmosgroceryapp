@@ -144,16 +144,40 @@ async function getItem(loyverseItemId) {
 async function updateVariantLowStock(loyverseItemId, variantId, lowStock) {
   const item = await getItem(loyverseItemId)
   const storeId = process.env.LOYVERSE_STORE_ID
-  for (const v of item.variants || []) {
-    if (variantId && v.variant_id !== variantId) continue
-    for (const s of v.stores || []) {
-      if (!storeId || s.store_id === storeId) s.low_stock = lowStock
-    }
+  const v = (item.variants || []).find((x) => !variantId || x.variant_id === variantId) || item.variants?.[0]
+  if (!v) throw new Error('variant not found on item')
+
+  // Build a CLEAN minimal payload. Echoing the full GET'd item back (with
+  // read-only fields like created_at/updated_at/deleted_at/components) makes
+  // Loyverse reject the update — that was the cause of the mass sync failure.
+  const stores = (v.stores || []).map((s) => ({
+    store_id: s.store_id,
+    pricing_type: s.pricing_type || 'FIXED',
+    price: s.price ?? v.default_price ?? 0,
+    available_for_sale: s.available_for_sale ?? true,
+    optimal_stock: s.optimal_stock ?? null,
+    low_stock: (!storeId || s.store_id === storeId) ? lowStock : (s.low_stock ?? null),
+  }))
+
+  const body = {
+    id: item.id,
+    item_name: item.item_name,
+    reference_id: item.reference_id,
+    description: item.description || '',
+    track_stock: true,
+    variants: [{
+      variant_id: v.variant_id,
+      default_pricing_type: v.default_pricing_type || 'FIXED',
+      default_price: v.default_price ?? 0,
+      stores,
+    }],
   }
+  if (item.category_id) body.category_id = item.category_id
+
   const res = await fetch(`${LOYVERSE_BASE}/items/${loyverseItemId}`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify(item),
+    body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error(`Loyverse low_stock error ${res.status}: ${await res.text()}`)
   return res.json()

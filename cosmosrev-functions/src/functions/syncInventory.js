@@ -27,9 +27,11 @@ app.http('syncInventory', {
         }
         try {
           await updateItemStock(p.variantId, p.quantity)
-          // Also push the reorder threshold (min) when we have one and the item is linked.
+          // Push the reorder threshold (min) best-effort — a low_stock hiccup
+          // must not fail the stock sync for the product.
           if (p.reorderLevel != null && p.itemId) {
-            await updateVariantLowStock(p.itemId, p.variantId, p.reorderLevel)
+            try { await updateVariantLowStock(p.itemId, p.variantId, p.reorderLevel) }
+            catch (lowErr) { context.log(`low_stock push failed for ${p.sku}: ${lowErr.message}`) }
           }
           results.synced.push({ sku: p.sku, name: p.name, qty: p.quantity, min: p.reorderLevel })
         } catch (err) {
