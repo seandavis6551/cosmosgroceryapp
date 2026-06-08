@@ -36,12 +36,12 @@ app.http('syncProduct', {
 
       let action
       if (product.sol_loyverse_item_id) {
-        // Already linked -> update the existing Loyverse item in place
-        // (track_stock + low_stock are set here so stock can sync).
+        // Already linked -> update catalog fields + the reorder level (min) only.
+        // We deliberately DO NOT push quantity here: Loyverse owns live stock (sales
+        // happen at the till), so re-asserting Dataverse's count on a catalog edit
+        // would clobber sales. Stock flows Loyverse -> Dataverse via the webhook;
+        // deliberate overrides go through the syncInventory ("Sync all") button.
         await updateItem(product.sol_loyverse_item_id, product, reorderLevel, product.sol_loyverse_variant_id)
-        if (product.sol_loyverse_variant_id && inventory && inventory.sol_quantityonhand != null) {
-          await updateItemStock(product.sol_loyverse_variant_id, inventory.sol_quantityonhand)
-        }
         action = 'updated'
       } else {
         // Not linked yet -> create it, then write the IDs back to Dataverse.

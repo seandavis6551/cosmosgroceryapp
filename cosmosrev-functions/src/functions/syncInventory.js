@@ -1,6 +1,6 @@
 const { app } = require('@azure/functions')
 const { getLinkedProductsWithStock } = require('../lib/dataverse')
-const { updateItemStock } = require('../lib/loyverse')
+const { updateItemStock, updateVariantLowStock } = require('../lib/loyverse')
 
 // "Sync all" — pushes Dataverse on-hand quantities up to Loyverse for every
 // linked product. Use this after manual stock adjustments / restocks in the app.
@@ -27,7 +27,11 @@ app.http('syncInventory', {
         }
         try {
           await updateItemStock(p.variantId, p.quantity)
-          results.synced.push({ sku: p.sku, name: p.name, qty: p.quantity })
+          // Also push the reorder threshold (min) when we have one and the item is linked.
+          if (p.reorderLevel != null && p.itemId) {
+            await updateVariantLowStock(p.itemId, p.variantId, p.reorderLevel)
+          }
+          results.synced.push({ sku: p.sku, name: p.name, qty: p.quantity, min: p.reorderLevel })
         } catch (err) {
           context.log(`Failed to push stock for ${p.sku}: ${err.message}`)
           results.failed.push({ sku: p.sku, name: p.name, error: err.message })

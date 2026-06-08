@@ -66,6 +66,19 @@ async function dvPost(path, body) {
   return res.json()
 }
 
+async function dvDelete(path) {
+  const token = await getToken()
+  const res = await fetch(`${process.env.DATAVERSE_URL}/api/data/v9.2/${path}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'OData-MaxVersion': '4.0',
+      'OData-Version': '4.0',
+    },
+  })
+  if (!res.ok && res.status !== 404) throw new Error(`Dataverse DELETE error ${res.status}: ${await res.text()}`)
+}
+
 function nextId(prefix, existing) {
   const nums = existing
     .map((v) => { const m = v?.match(/\d+$/); return m ? parseInt(m[0], 10) : 0 })
@@ -99,7 +112,7 @@ async function updateProductBarcode(productId, barcode) {
   await dvPatch(`sol_productses(${productId})`, { sol_barcode: barcode })
 }
 
-async function createProductFromLoyverse(item, variantId, price, quantity, barcode) {
+async function createProductFromLoyverse(item, variantId, price, quantity, barcode, reorderLevel = 10) {
   const productId = await getNextProductId()
   const product = await dvPost('sol_productses', {
     sol_name: item.item_name,
@@ -117,7 +130,7 @@ async function createProductFromLoyverse(item, variantId, price, quantity, barco
   await dvPost('sol_cosmosinventories', {
     sol_inventoryid: inventoryId,
     sol_quantityonhand: quantity ?? 0,
-    sol_reorderlevel: 10,
+    sol_reorderlevel: reorderLevel ?? 10,
     'sol_ProductID@odata.bind': `/sol_productses(${product.sol_productsid})`,
   })
   return product
@@ -231,6 +244,30 @@ async function setInventoryQuantity(productId, quantity) {
   }
 }
 
+// Patch on-hand qty and/or reorder level WITHOUT clobbering the other field.
+// Only fields that are actually provided (non-null) get written — this is what
+// keeps the pull from zeroing a product just because Loyverse omitted its data.
+async function setInventoryLevels(productId, { quantity, reorderLevel } = {}) {
+  const patch = {}
+  if (quantity != null) patch.sol_quantityonhand = quantity
+  if (reorderLevel != null) patch.sol_reorderlevel = reorderLevel
+  if (Object.keys(patch).length === 0) return
+
+  const data = await dvFetch(
+    `sol_cosmosinventories?$select=sol_cosmosinventoryid&$filter=_sol_productid_value eq ${productId}&$top=1`
+  )
+  const existing = data.value[0]
+  if (existing) {
+    await dvPatch(`sol_cosmosinventories(${existing.sol_cosmosinventoryid})`, patch)
+  } else {
+    await dvPost('sol_cosmosinventories', {
+      sol_quantityonhand: quantity ?? 0,
+      sol_reorderlevel: reorderLevel ?? 10,
+      'sol_ProductID@odata.bind': `/sol_productses(${productId})`,
+    })
+  }
+}
+
 // Requires sol_unit and sol_image_url fields on sol_productses in Dataverse
 async function getPublicProducts() {
   const [productsData, inventoryData] = await Promise.all([
@@ -277,6 +314,60 @@ async function dvPatchImageUrl(productId, imageUrl) {
   await dvPatch(`sol_productses(${productId})`, { sol_imageurl: imageUrl })
 }
 
+// --- Sales ledger (sol_sales) -----------------------------------------------
+// Append-only log of receipt line items. A receipt can be re-sent or edited by
+// Loyverse, so we make ingestion idempotent: delete any existing rows for the
+// receipt, then insert the current lines fresh. Sums therefore always reconcile.
+
+// Escape single quotes for OData string literals.
+function odataStr(v) {
+  return String(v).replace(/'/g, "''")
+}
+
+async function deleteSalesByReceipt(receiptNumber) {
+  const data = await dvFetch(
+    `sol_sales?$select=sol_saleid&$filter=sol_receiptnumber eq '${odataStr(receiptNumber)}'`
+  )
+  for (const r of data.value) {
+    await dvDelete(`sol_sales(${r.sol_saleid})`)
+  }
+  return data.value.length
+}
+
+// Insert all line items for one receipt. Resolves the Dataverse product via the
+// Loyverse variant id when possible so the row links back to the catalog (cost,
+// category, etc.). Returns the number of lines written.
+async function insertReceiptLines(receipt, lines) {
+  // Optional link back to the catalog product. Lookup nav-property names are a
+  // known gotcha in this org, so we only bind when SALES_PRODUCT_LOOKUP_BIND is
+  // set to the exact bind key (e.g. "sol_ProductID@odata.bind"). Until then the
+  // ledger still works and joins happen on sol_loyversevariantid.
+  const bindProp = process.env.SALES_PRODUCT_LOOKUP_BIND
+  let written = 0
+  for (const line of lines) {
+    const product = bindProp && line.variantId ? await getProductByVariantId(line.variantId) : null
+    const row = {
+      sol_name: `${receipt.receiptNumber}-${line.lineNumber}`,
+      sol_receiptnumber: receipt.receiptNumber,
+      sol_linenumber: line.lineNumber,
+      sol_receiptdate: receipt.receiptDate,
+      sol_receipttype: receipt.receiptType,
+      sol_storeid: receipt.storeId || null,
+      sol_itemname: line.itemName || null,
+      sol_loyversevariantid: line.variantId || null,
+      sol_quantity: line.quantity,
+      sol_unitprice: line.unitPrice,
+      sol_linetotal: line.lineTotal,
+      sol_cost: line.cost,
+      sol_grossmargin: line.lineTotal != null && line.cost != null ? line.lineTotal - line.cost : null,
+    }
+    if (product && bindProp) row[bindProp] = `/sol_productses(${product.sol_productsid})`
+    await dvPost('sol_sales', row)
+    written++
+  }
+  return written
+}
+
 module.exports = {
   dvPatchImageUrl,
   getAllLoyverseLinkedItems,
@@ -289,8 +380,11 @@ module.exports = {
   createInventoryRecord,
   getProductByVariantId,
   setInventoryQuantity,
+  setInventoryLevels,
   getLinkedProductsWithStock,
   deactivateProduct,
   getPublicProducts,
   getPublicCategories,
+  deleteSalesByReceipt,
+  insertReceiptLines,
 }

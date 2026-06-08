@@ -90,18 +90,62 @@ async function deleteItem(loyverseItemId) {
   return true
 }
 
+// Loyverse uses cursor pagination with a default page of ~10 and a max of 250.
+// Without looping the cursor we only ever see the first page, which is what made
+// the pull think most variants had no stock and reset them to 0.
+async function fetchAllPages(path, key) {
+  let all = []
+  let cursor = null
+  do {
+    const url = new URL(`${LOYVERSE_BASE}/${path}`)
+    url.searchParams.set('limit', '250')
+    if (cursor) url.searchParams.set('cursor', cursor)
+    const res = await fetch(url, { headers: headers() })
+    if (!res.ok) throw new Error(`Loyverse ${path} fetch error ${res.status}: ${await res.text()}`)
+    const data = await res.json()
+    all = all.concat(data[key] || [])
+    cursor = data.cursor || null
+  } while (cursor)
+  return all
+}
+
 async function getAllItems() {
-  const res = await fetch(`${LOYVERSE_BASE}/items?limit=250`, { headers: headers() })
-  if (!res.ok) throw new Error(`Loyverse items fetch error ${res.status}: ${await res.text()}`)
-  return res.json()
+  return { items: await fetchAllPages('items', 'items') }
 }
 
 async function getStoreInventory() {
-  const res = await fetch(`${LOYVERSE_BASE}/inventory?store_id=${process.env.LOYVERSE_STORE_ID}`, {
-    headers: headers(),
-  })
-  if (!res.ok) throw new Error(`Loyverse inventory fetch error ${res.status}: ${await res.text()}`)
+  const items = await fetchAllPages(
+    `inventory?store_id=${process.env.LOYVERSE_STORE_ID}`,
+    'inventory_levels'
+  )
+  return { inventory_levels: items }
+}
+
+async function getItem(loyverseItemId) {
+  const res = await fetch(`${LOYVERSE_BASE}/items/${loyverseItemId}`, { headers: headers() })
+  if (!res.ok) throw new Error(`Loyverse item fetch error ${res.status}: ${await res.text()}`)
   return res.json()
 }
 
-module.exports = { createItem, updateItemStock, updateItem, deleteItem, getStoreInventory, getAllItems }
+// Push the reorder threshold (min) to Loyverse. low_stock lives on the variant's
+// store entry, not the /inventory endpoint, so we fetch the item, patch the field
+// on the matching store, and post the whole item back (preserving every other field).
+async function updateVariantLowStock(loyverseItemId, variantId, lowStock) {
+  const item = await getItem(loyverseItemId)
+  const storeId = process.env.LOYVERSE_STORE_ID
+  for (const v of item.variants || []) {
+    if (variantId && v.variant_id !== variantId) continue
+    for (const s of v.stores || []) {
+      if (!storeId || s.store_id === storeId) s.low_stock = lowStock
+    }
+  }
+  const res = await fetch(`${LOYVERSE_BASE}/items/${loyverseItemId}`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify(item),
+  })
+  if (!res.ok) throw new Error(`Loyverse low_stock error ${res.status}: ${await res.text()}`)
+  return res.json()
+}
+
+module.exports = { createItem, updateItemStock, updateItem, deleteItem, getStoreInventory, getAllItems, getItem, updateVariantLowStock }

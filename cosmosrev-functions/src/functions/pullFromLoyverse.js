@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { getAllLoyverseLinkedItems, createProductFromLoyverse, setInventoryQuantity, updateProductBarcode } = require('../lib/dataverse')
+const { getAllLoyverseLinkedItems, createProductFromLoyverse, setInventoryLevels, updateProductBarcode } = require('../lib/dataverse')
 const { getAllItems, getStoreInventory } = require('../lib/loyverse')
 
 app.http('pullFromLoyverse', {
@@ -39,16 +39,22 @@ app.http('pullFromLoyverse', {
 
         const variantId = variant.variant_id
         const price = variant.default_price ?? variant.stores?.[0]?.price ?? 0
-        const qty = stockMap[variantId] ?? 0
         const barcode = variant.barcode || null
 
+        // Only treat stock as known if Loyverse actually returned a level for this
+        // variant. A missing entry means "no data", NOT "zero" — never overwrite with 0.
+        const storeId = process.env.LOYVERSE_STORE_ID
+        const qty = Object.prototype.hasOwnProperty.call(stockMap, variantId) ? stockMap[variantId] : null
+        const store = variant.stores?.find((s) => !storeId || s.store_id === storeId) ?? variant.stores?.[0]
+        const lowStock = store?.low_stock ?? null
+
         if (existingMap[item.id]) {
-          // Already in Dataverse — update stock and barcode
+          // Already in Dataverse — update stock, reorder level (min) and barcode.
           const { productId } = existingMap[item.id]
           try {
-            await setInventoryQuantity(productId, qty)
+            await setInventoryLevels(productId, { quantity: qty, reorderLevel: lowStock })
             await updateProductBarcode(productId, barcode)
-            results.updated.push({ name: item.item_name, qty })
+            results.updated.push({ name: item.item_name, qty, min: lowStock })
           } catch (err) {
             context.log(`Failed to update stock for ${item.item_name}: ${err.message}`)
             results.failed.push({ name: item.item_name, error: err.message })
@@ -56,8 +62,8 @@ app.http('pullFromLoyverse', {
         } else {
           // New item — import into Dataverse
           try {
-            await createProductFromLoyverse(item, variantId, price, qty, barcode)
-            results.imported.push({ name: item.item_name, qty, price })
+            await createProductFromLoyverse(item, variantId, price, qty, barcode, lowStock)
+            results.imported.push({ name: item.item_name, qty, price, min: lowStock })
           } catch (err) {
             context.log(`Failed to import ${item.item_name}: ${err.message}`)
             results.failed.push({ name: item.item_name, error: err.message })
