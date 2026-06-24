@@ -98,7 +98,7 @@ function TopNav({ searchQuery, setSearchQuery }) {
   const { totalItems, subtotal, setCartOpen } = useContext(CartContext);
 
   return (
-    <nav className="sticky top-0 z-40 bg-white border-b border-slate-100 shadow-sm">
+    <nav className="sticky top-0 z-40 bg-stone-50 border-b border-stone-200 shadow-sm">
       <div className="max-w-screen-xl mx-auto px-4 h-[68px] flex items-center gap-3 md:gap-5">
 
         {/* Logo */}
@@ -289,7 +289,7 @@ function DealsCarousel({ products }) {
           return (
             <div
               key={product.id}
-              className="shrink-0 w-44 bg-white rounded-2xl border border-slate-100 shadow-sm
+              className="shrink-0 w-44 bg-stone-50 rounded-2xl border border-stone-100 shadow-sm
                          hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden"
             >
               <div className={`h-28 bg-gradient-to-br ${product.color} flex items-center justify-center relative`}>
@@ -345,7 +345,7 @@ function ProductCard({ product }) {
 
   return (
     <div
-      className={`bg-white rounded-2xl border border-slate-100 shadow-sm
+      className={`bg-stone-50 rounded-2xl border border-stone-100 shadow-sm
                   hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden
                   ${!product.inStock ? 'opacity-60' : ''}`}
     >
@@ -492,7 +492,7 @@ function CartDrawer({ onCheckout }) {
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white z-50 shadow-2xl
+        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-stone-50 z-50 shadow-2xl
                     flex flex-col transition-transform duration-300 ease-out
                     ${cartOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
@@ -559,7 +559,7 @@ function CartDrawer({ onCheckout }) {
                   <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 rounded-full px-2 py-1 shrink-0">
                     <button
                       onClick={() => removeItem(product)}
-                      className="w-6 h-6 rounded-full bg-white border border-slate-200 text-slate-600
+                      className="w-6 h-6 rounded-full bg-stone-100 border border-stone-200 text-slate-600
                                  flex items-center justify-center text-lg font-light
                                  hover:border-teal-400 hover:text-teal-600 transition-colors leading-none"
                     >
@@ -673,7 +673,7 @@ export default function App() {
               <HeroBanner />
             </div>
 
-            <div className="px-4 py-3 border-b border-slate-100 bg-white mt-0">
+            <div className="px-4 py-3 border-b border-stone-200 bg-stone-50 mt-0">
               <MobileCategoryStrip
                 categories={categories}
                 selected={selectedCategory}
