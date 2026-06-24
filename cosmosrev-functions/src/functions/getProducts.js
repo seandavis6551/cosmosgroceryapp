@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { getPublicProducts } = require('../lib/dataverse')
+const { getPublicProducts } = require('../lib/db')
 
 app.http('getProducts', {
   methods: ['GET'],

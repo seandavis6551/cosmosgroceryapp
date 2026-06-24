@@ -1,4 +1,4 @@
-const { deleteSalesByReceipt, insertReceiptLines } = require('./dataverse')
+const { deleteSalesByReceipt, insertReceiptLines } = require('./db')
 
 // Shared receipt -> sales-ledger logic, used by BOTH the live webhook and the
 // manual "Pull sales" reconciliation. Keeping it here means the two paths can

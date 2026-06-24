@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { createInventoryRecord } = require('../lib/dataverse')
+const { createInventoryRecord } = require('../lib/db')
 
 app.http('createInventoryRecord', {
   methods: ['POST'],

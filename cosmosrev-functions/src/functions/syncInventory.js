@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { getLinkedProductsWithStock } = require('../lib/dataverse')
+const { getLinkedProductsWithStock } = require('../lib/db')
 const { updateItemStock, updateVariantLowStock } = require('../lib/loyverse')
 
 // "Sync all" — pushes Dataverse on-hand quantities up to Loyverse for every

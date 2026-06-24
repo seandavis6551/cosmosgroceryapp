@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { getProductById, deactivateProduct } = require('../lib/dataverse')
+const { getProductById, deactivateProduct } = require('../lib/db')
 const { deleteItem } = require('../lib/loyverse')
 
 // Soft-delete a product everywhere: removes the item from Loyverse (so it stops

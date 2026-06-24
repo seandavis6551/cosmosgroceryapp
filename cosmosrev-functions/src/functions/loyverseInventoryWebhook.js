@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { getProductByVariantId, setInventoryQuantity } = require('../lib/dataverse')
+const { getProductByVariantId, setInventoryQuantity } = require('../lib/db')
 
 // Receives Loyverse "inventory_levels.update" webhooks and mirrors the new
 // on-hand quantity into Dataverse (sol_cosmosinventories). This is how a sale

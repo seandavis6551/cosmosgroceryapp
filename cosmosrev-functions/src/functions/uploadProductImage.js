@@ -1,6 +1,6 @@
 const { app } = require('@azure/functions')
 const { BlobServiceClient } = require('@azure/storage-blob')
-const { dvPatchImageUrl } = require('../lib/dataverse')
+const { dvPatchImageUrl } = require('../lib/db')
 
 app.http('uploadProductImage', {
   methods: ['POST'],

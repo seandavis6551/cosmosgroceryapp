@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { getUnsyncedProducts, updateProductLoyverseIds, getInventoryForProduct } = require('../lib/dataverse')
+const { getUnsyncedProducts, updateProductLoyverseIds, getInventoryForProduct } = require('../lib/db')
 const { createItem, updateItemStock } = require('../lib/loyverse')
 
 app.http('syncProducts', {

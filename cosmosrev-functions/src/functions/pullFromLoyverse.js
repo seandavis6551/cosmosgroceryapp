@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { getAllLoyverseLinkedItems, createProductFromLoyverse, setInventoryLevels, updateProductBarcode } = require('../lib/dataverse')
+const { getAllLoyverseLinkedItems, createProductFromLoyverse, setInventoryLevels, updateProductBarcode } = require('../lib/db')
 const { getAllItems, getStoreInventory } = require('../lib/loyverse')
 
 app.http('pullFromLoyverse', {

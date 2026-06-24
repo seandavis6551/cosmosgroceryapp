@@ -9,7 +9,8 @@
   "dependencies": {
     "@azure/functions": "^4.0.0",
     "@azure/identity": "^4.13.1",
-    "@azure/storage-blob": "^12.32.0"
+    "@azure/storage-blob": "^12.32.0",
+    "mssql": "^11.0.1"
   },
   "main": "src/{index.js,functions/*.js}"
 }

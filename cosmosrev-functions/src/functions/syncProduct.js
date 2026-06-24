@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { getProductById, updateProductLoyverseIds, getInventoryForProduct } = require('../lib/dataverse')
+const { getProductById, updateProductLoyverseIds, getInventoryForProduct } = require('../lib/db')
 const { createItem, updateItem, updateItemStock } = require('../lib/loyverse')
 
 // Single-product, change-driven sync (Dataverse -> Loyverse).

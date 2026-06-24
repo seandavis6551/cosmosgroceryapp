@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { updateProductFields } = require('../lib/dataverse')
+const { updateProductFields } = require('../lib/db')
 
 // Updates editable product fields (category, prices) on behalf of the inventory
 // app, using the service principal. This avoids requiring each signed-in user to

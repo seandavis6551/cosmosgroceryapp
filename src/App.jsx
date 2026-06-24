@@ -640,8 +640,8 @@ export default function App() {
       fetch(`${FUNCTIONS_URL}/getCategories`).then((r) => r.json()),
     ])
       .then(([prods, cats]) => {
-        setProducts(prods);
-        const mapped = cats.map((c) => ({ ...c, icon: getCategoryIcon(c.name) }));
+        setProducts(Array.isArray(prods) ? prods : []);
+        const mapped = Array.isArray(cats) ? cats.map((c) => ({ ...c, icon: getCategoryIcon(c.name) })) : [];
         setCategories([{ id: 'all', name: 'All Items', icon: '🛒' }, ...mapped]);
       })
       .catch(console.error)
