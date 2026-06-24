@@ -19,6 +19,7 @@ function getCategoryIcon(name) {
   if (n.includes('rice') || n.includes('grain') || n.includes('cereal') || n.includes('pasta')) return '🌾';
   if (n.includes('canned') || n.includes('tin')) return '🥫';
   if (n.includes('tobacco') || n.includes('cigarette')) return '🚬';
+  if (n.includes('electronic') || n.includes('accessor')) return '📱';
   return '🛒';
 }
 
