@@ -343,6 +343,38 @@ async function dvPatchImageUrl(productId, imageUrl) {
     .query(`UPDATE Products SET image_url = @imageUrl, updated_at = GETUTCDATE() WHERE id = @id`)
 }
 
+// Tiny key/value table for one-off app state, e.g. "when did pullFromLoyverse
+// last actually run" — distinct from Products.updated_at, which changes on
+// any edit (price, barcode, manual stock adjust), not just a Loyverse pull.
+async function ensureSyncMetaTable(p) {
+  await p.request().query(`
+    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'SyncMeta')
+    CREATE TABLE SyncMeta (meta_key NVARCHAR(50) PRIMARY KEY, meta_value NVARCHAR(255))
+  `)
+}
+
+async function recordSyncMeta(key, value) {
+  const p = await getPool()
+  await ensureSyncMetaTable(p)
+  await p.request()
+    .input('key', sql.NVarChar(50), key)
+    .input('value', sql.NVarChar(255), value)
+    .query(`
+      MERGE SyncMeta AS target
+      USING (SELECT @key AS meta_key, @value AS meta_value) AS src
+      ON target.meta_key = src.meta_key
+      WHEN MATCHED THEN UPDATE SET meta_value = src.meta_value
+      WHEN NOT MATCHED THEN INSERT (meta_key, meta_value) VALUES (src.meta_key, src.meta_value)
+    `)
+}
+
+async function getSyncMeta(key) {
+  const p = await getPool()
+  await ensureSyncMetaTable(p)
+  const res = await p.request().input('key', sql.NVarChar(50), key).query(`SELECT meta_value FROM SyncMeta WHERE meta_key = @key`)
+  return res.recordset[0]?.meta_value || null
+}
+
 // Reads the sales ledger for a { since, until } ISO window (until optional).
 // Shaped to match what the Sales page expects: id, receiptNumber, date, type, etc.
 async function getSalesLines({ since, until } = {}) {
@@ -445,5 +477,7 @@ module.exports = {
   deleteSalesByReceipt,
   insertReceiptLines,
   getSalesLines,
+  recordSyncMeta,
+  getSyncMeta,
   updateProductFields,
 }

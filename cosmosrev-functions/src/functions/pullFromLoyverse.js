@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { getAllLoyverseLinkedItems, createProductFromLoyverse, setInventoryLevels, updateProductBarcode } = require('../lib/db')
+const { getAllLoyverseLinkedItems, createProductFromLoyverse, setInventoryLevels, updateProductBarcode, recordSyncMeta } = require('../lib/db')
 const { getAllItems, getStoreInventory } = require('../lib/loyverse')
 
 app.http('pullFromLoyverse', {
@@ -70,6 +70,11 @@ app.http('pullFromLoyverse', {
           }
         }
       }
+
+      // Best-effort: never let a SyncMeta hiccup (e.g. table not provisioned yet)
+      // fail a pull that already did the real work.
+      try { await recordSyncMeta('lastPullFromLoyverse', new Date().toISOString()) }
+      catch (metaErr) { context.log(`recordSyncMeta failed: ${metaErr.message}`) }
 
       return {
         status: 200,
