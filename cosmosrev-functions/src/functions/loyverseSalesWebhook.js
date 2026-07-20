@@ -17,6 +17,13 @@ app.http('loyverseSalesWebhook', {
   methods: ['POST'],
   authLevel: 'anonymous',
   handler: async (request, context) => {
+    // Kill switch: sales are pulled manually (Pull Sales button) to control
+    // Functions spend. Set DISABLE_SALES_WEBHOOK=false to re-enable auto-ingest
+    // once the Loyverse webhook subscription is deliberately turned back on.
+    if (process.env.DISABLE_SALES_WEBHOOK !== 'false') {
+      return { status: 200, jsonBody: { ok: true, note: 'sales webhook disabled — pull sales manually' } }
+    }
+
     const expected = process.env.LOYVERSE_WEBHOOK_SECRET
     if (expected && request.query.get('token') !== expected) {
       return { status: 401, jsonBody: { error: 'unauthorized' } }

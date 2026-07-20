@@ -343,6 +343,38 @@ async function dvPatchImageUrl(productId, imageUrl) {
     .query(`UPDATE Products SET image_url = @imageUrl, updated_at = GETUTCDATE() WHERE id = @id`)
 }
 
+// Reads the sales ledger for a { since, until } ISO window (until optional).
+// Shaped to match what the Sales page expects: id, receiptNumber, date, type, etc.
+async function getSalesLines({ since, until } = {}) {
+  const p = await getPool()
+  const req = p.request().input('since', sql.DateTime2, new Date(since))
+  let query = `
+    SELECT id, receipt_number, line_number, receipt_date, receipt_type, item_name,
+           loyverse_variant_id, quantity, unit_price, line_total, cost, gross_margin
+    FROM Sales
+    WHERE receipt_date >= @since`
+  if (until) {
+    req.input('until', sql.DateTime2, new Date(until))
+    query += ` AND receipt_date < @until`
+  }
+  query += ` ORDER BY receipt_date DESC`
+  const res = await req.query(query)
+  return res.recordset.map((r) => ({
+    id: r.id,
+    receiptNumber: r.receipt_number,
+    lineNumber: r.line_number,
+    date: r.receipt_date,
+    type: r.receipt_type || 'SALE',
+    itemName: r.item_name,
+    variantId: r.loyverse_variant_id || null,
+    quantity: r.quantity != null ? Number(r.quantity) : 0,
+    unitPrice: r.unit_price != null ? Number(r.unit_price) : 0,
+    lineTotal: r.line_total != null ? Number(r.line_total) : 0,
+    cost: r.cost != null ? Number(r.cost) : null,
+    grossMargin: r.gross_margin != null ? Number(r.gross_margin) : null,
+  }))
+}
+
 async function deleteSalesByReceipt(receiptNumber) {
   const p = await getPool()
   const res = await p.request()
@@ -412,5 +444,6 @@ module.exports = {
   getPublicCategories,
   deleteSalesByReceipt,
   insertReceiptLines,
+  getSalesLines,
   updateProductFields,
 }

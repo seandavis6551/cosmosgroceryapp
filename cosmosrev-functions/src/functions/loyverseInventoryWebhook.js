@@ -11,6 +11,14 @@ app.http('loyverseInventoryWebhook', {
   methods: ['POST'],
   authLevel: 'anonymous',
   handler: async (request, context) => {
+    // Kill switch: stock is synced manually (Pull from Loyverse) to control
+    // Functions spend. Set DISABLE_INVENTORY_WEBHOOK=false to re-enable
+    // auto-sync once the Loyverse webhook subscription is deliberately turned
+    // back on.
+    if (process.env.DISABLE_INVENTORY_WEBHOOK !== 'false') {
+      return { status: 200, jsonBody: { ok: true, note: 'inventory webhook disabled — sync manually' } }
+    }
+
     const expected = process.env.LOYVERSE_WEBHOOK_SECRET
     if (expected && request.query.get('token') !== expected) {
       return { status: 401, jsonBody: { error: 'unauthorized' } }
