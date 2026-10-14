@@ -11,6 +11,10 @@ const { ingestReceipt } = require('../lib/sales')
 //   POST /api/pullSales            -> last 7 days
 //   POST /api/pullSales?days=30    -> last 30 days
 //   body { "since": "2026-06-01T00:00:00Z", "until": "2026-06-08T00:00:00Z" }
+//
+// Loyverse's free plan refuses (402) any receipts query reaching back more than
+// 31 days, so older windows are trimmed to the last 30 days.
+const HISTORY_LIMIT_DAYS = 30
 app.http('pullSales', {
   methods: ['POST'],
   authLevel: 'function',
@@ -20,8 +24,19 @@ app.http('pullSales', {
 
     const daysRaw = body?.days ?? request.query.get('days')
     const days = Number.isFinite(Number(daysRaw)) && daysRaw != null ? Number(daysRaw) : 7
-    const createdMin = body?.since || new Date(Date.now() - days * 86400000).toISOString()
+    const requestedMin = body?.since || new Date(Date.now() - days * 86400000).toISOString()
     const createdMax = body?.until || undefined
+    const historyStart = new Date(Date.now() - HISTORY_LIMIT_DAYS * 86400000)
+    const trimmed = new Date(requestedMin) < historyStart
+    const createdMin = trimmed ? historyStart.toISOString() : requestedMin
+    const note = trimmed ? ` Loyverse only allows the last ${HISTORY_LIMIT_DAYS} days, so older sales were skipped.` : ''
+
+    if (createdMax && new Date(createdMax) <= historyStart) {
+      return {
+        status: 200,
+        jsonBody: { message: `Nothing pulled.${note}`, from: requestedMin, to: createdMax, receipts: 0, logged: 0, cancelled: 0, failed: 0, errors: [], trimmed },
+      }
+    }
 
     context.log(`pullSales: window ${createdMin} -> ${createdMax || 'now'}`)
 
@@ -45,7 +60,7 @@ app.http('pullSales', {
       return {
         status: 200,
         jsonBody: {
-          message: `${receipts.length} receipts processed: ${logged} logged, ${cancelled} cancelled, ${failed} failed.`,
+          message: `${receipts.length} receipts processed: ${logged} logged, ${cancelled} cancelled, ${failed} failed.${note}`,
           from: createdMin,
           to: createdMax || null,
           receipts: receipts.length,
@@ -53,6 +68,7 @@ app.http('pullSales', {
           cancelled,
           failed,
           errors: errors.slice(0, 20),
+          trimmed,
         },
       }
     } catch (err) {
