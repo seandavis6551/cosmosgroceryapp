@@ -457,7 +457,177 @@ async function insertReceiptLines(receipt, lines) {
   return written
 }
 
+// ── Inventory app reads/writes (replaces the app's old direct Dataverse calls) ──
+
+// Loyverse sync status: stored as the old Dataverse choice int, surfaced as the
+// label the inventory app's StatusBadge expects.
+const SYNC_STATUS_LABELS = { 922880000: 'Synced', 922880001: 'Pending', 922880002: 'Error' }
+function syncStatusLabel(v) {
+  if (v == null) return 'Pending'
+  return SYNC_STATUS_LABELS[v] || (typeof v === 'string' ? v : 'Pending')
+}
+
+const num = (v) => (v != null ? Number(v) : null)
+
+function mapInventoryItem(r) {
+  return {
+    id: r.id,
+    productId: r.product_code,
+    inventoryRecordId: r.inventory_id || null,
+    inventoryId: r.inventory_code || null,
+    name: r.name,
+    sku: r.sku,
+    barcode: r.barcode || null,
+    price: num(r.unit_price),
+    costPrice: num(r.cost_price),
+    categoryId: r.category_id || null,
+    imageUrl: r.image_url || null,
+    isActive: r.is_active === true || r.is_active === 1,
+    syncStatus: syncStatusLabel(r.loyverse_sync_status),
+    loyverseItemId: r.loyverse_item_id || null,
+    quantityOnHand: num(r.quantity_on_hand),
+    reorderLevel: num(r.reorder_level),
+    lastSynced: r.updated_at,
+  }
+}
+
+const INVENTORY_SELECT = `
+  SELECT p.id, p.product_code, p.name, p.sku, p.barcode, p.unit_price, p.cost_price,
+         p.category_id, p.image_url, p.is_active, p.loyverse_sync_status, p.loyverse_item_id,
+         p.updated_at, i.id AS inventory_id, i.inventory_code, i.quantity_on_hand, i.reorder_level
+  FROM Products p
+  LEFT JOIN Inventory i ON i.product_id = p.id AND i.is_deleted = 0`
+
+async function getInventoryList() {
+  const p = await getPool()
+  const res = await p.request().query(`${INVENTORY_SELECT} WHERE p.is_deleted = 0 ORDER BY p.name`)
+  return res.recordset.map(mapInventoryItem)
+}
+
+// Single product by id, barcode or sku (first one given wins).
+async function findInventoryItem({ id, barcode, sku } = {}) {
+  const req = (await getPool()).request()
+  let where
+  if (id) { req.input('id', sql.UniqueIdentifier, id); where = 'p.id = @id' }
+  else if (barcode) { req.input('barcode', sql.NVarChar(100), barcode); where = 'p.barcode = @barcode AND p.is_deleted = 0' }
+  else if (sku) { req.input('sku', sql.NVarChar(100), sku); where = 'p.sku = @sku AND p.is_deleted = 0' }
+  else return null
+  const res = await req.query(`${INVENTORY_SELECT} WHERE ${where}`)
+  return res.recordset[0] ? mapInventoryItem(res.recordset[0]) : null
+}
+
+async function createProduct(form) {
+  const productCode = await getNextProductCode()
+  const p = await getPool()
+  const req = p.request()
+    .input('name', sql.NVarChar(255), form.name)
+    .input('productCode', sql.NVarChar(20), productCode)
+    .input('sku', sql.NVarChar(100), form.sku || productCode)
+    .input('barcode', sql.NVarChar(100), form.barcode || null)
+    .input('unitPrice', sql.Decimal(18, 4), form.unitPrice ?? 0)
+    .input('costPrice', sql.Decimal(18, 4), form.costPrice ?? null)
+    .input('description', sql.NVarChar(sql.MAX), form.description || null)
+    .input('unit', sql.NVarChar(50), form.unit || null)
+    .input('isActive', sql.Bit, form.isActive !== false)
+    .input('categoryId', sql.UniqueIdentifier, form.categoryId || null)
+  const res = await req.query(`
+    INSERT INTO Products
+      (name, product_code, sku, barcode, unit_price, cost_price, description, unit, is_active, category_id, loyverse_sync_status)
+    OUTPUT INSERTED.id, INSERTED.product_code, INSERTED.name, INSERTED.sku
+    VALUES
+      (@name, @productCode, @sku, @barcode, @unitPrice, @costPrice, @description, @unit, @isActive, @categoryId, 922880001)
+  `)
+  const r = res.recordset[0]
+  return { id: r.id, productId: r.product_code, name: r.name, sku: r.sku }
+}
+
+async function clearProductImage(productId) {
+  const p = await getPool()
+  await p.request()
+    .input('id', sql.UniqueIdentifier, productId)
+    .query(`UPDATE Products SET image_url = NULL, updated_at = GETUTCDATE() WHERE id = @id`)
+}
+
+// Stock adjustment audit log — created on first use, like SyncMeta.
+async function ensureStockAdjustmentsTable(p) {
+  await p.request().query(`
+    IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'StockAdjustments')
+    CREATE TABLE StockAdjustments (
+      id              UNIQUEIDENTIFIER  DEFAULT NEWID()      PRIMARY KEY,
+      product_sku     NVARCHAR(100),
+      product_name    NVARCHAR(255),
+      adjustment_type NVARCHAR(20),
+      quantity        DECIMAL(18,4),
+      previous_qty    DECIMAL(18,4),
+      new_qty         DECIMAL(18,4),
+      reason          NVARCHAR(255),
+      reference_no    NVARCHAR(100),
+      supplier        NVARCHAR(255),
+      notes           NVARCHAR(MAX),
+      cost_impact     DECIMAL(18,4),
+      adjusted_by     NVARCHAR(255),
+      created_at      DATETIME2         DEFAULT GETUTCDATE()
+    )
+  `)
+}
+
+async function insertStockAdjustment(rec) {
+  const p = await getPool()
+  await ensureStockAdjustmentsTable(p)
+  await p.request()
+    .input('sku', sql.NVarChar(100), rec.sku || null)
+    .input('name', sql.NVarChar(255), rec.name || null)
+    .input('type', sql.NVarChar(20), rec.type || null)
+    .input('quantity', sql.Decimal(18, 4), rec.quantity ?? null)
+    .input('previousQty', sql.Decimal(18, 4), rec.previousQty ?? null)
+    .input('newQty', sql.Decimal(18, 4), rec.newQty ?? null)
+    .input('reason', sql.NVarChar(255), rec.reason || null)
+    .input('refNumber', sql.NVarChar(100), rec.refNumber || null)
+    .input('supplier', sql.NVarChar(255), rec.supplier || null)
+    .input('notes', sql.NVarChar(sql.MAX), rec.notes || null)
+    .input('costImpact', sql.Decimal(18, 4), rec.costImpact ?? null)
+    .input('adjustedBy', sql.NVarChar(255), rec.adjustedBy || null)
+    .query(`
+      INSERT INTO StockAdjustments
+        (product_sku, product_name, adjustment_type, quantity, previous_qty, new_qty, reason,
+         reference_no, supplier, notes, cost_impact, adjusted_by)
+      VALUES
+        (@sku, @name, @type, @quantity, @previousQty, @newQty, @reason,
+         @refNumber, @supplier, @notes, @costImpact, @adjustedBy)
+    `)
+}
+
+async function getStockAdjustments(days = 30) {
+  const p = await getPool()
+  await ensureStockAdjustmentsTable(p)
+  const res = await p.request()
+    .input('since', sql.DateTime2, new Date(Date.now() - days * 86400000))
+    .query(`SELECT TOP 500 * FROM StockAdjustments WHERE created_at >= @since ORDER BY created_at DESC`)
+  return res.recordset.map((r) => ({
+    id: r.id,
+    date: r.created_at,
+    sku: r.product_sku,
+    name: r.product_name,
+    type: r.adjustment_type,
+    quantity: num(r.quantity) ?? 0,
+    previousQty: num(r.previous_qty),
+    newQty: num(r.new_qty),
+    reason: r.reason,
+    refNumber: r.reference_no,
+    supplier: r.supplier,
+    notes: r.notes,
+    costImpact: num(r.cost_impact),
+    adjustedBy: r.adjusted_by,
+  }))
+}
+
 module.exports = {
+  getInventoryList,
+  findInventoryItem,
+  createProduct,
+  clearProductImage,
+  insertStockAdjustment,
+  getStockAdjustments,
   dvPatchImageUrl,
   getAllLoyverseLinkedItems,
   createProductFromLoyverse,

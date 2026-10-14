@@ -1,5 +1,5 @@
 const { app } = require('@azure/functions')
-const { updateProductFields } = require('../lib/db')
+const { updateProductFields, clearProductImage } = require('../lib/db')
 
 // Updates editable product fields (category, prices) on behalf of the inventory
 // app, using the service principal. This avoids requiring each signed-in user to
@@ -7,6 +7,7 @@ const { updateProductFields } = require('../lib/db')
 //
 // Body: { productId, categoryId?, unitPrice?, costPrice? }
 //   - categoryId: GUID to set, or null to clear; omit to leave unchanged.
+//   - clearImage: true removes the product image.
 app.http('updateProduct', {
   methods: ['POST'],
   authLevel: 'function',
@@ -14,7 +15,7 @@ app.http('updateProduct', {
     let body
     try { body = await request.json() } catch { return { status: 400, jsonBody: { error: 'Invalid JSON body' } } }
 
-    const { productId, categoryId, unitPrice, costPrice } = body || {}
+    const { productId, categoryId, unitPrice, costPrice, clearImage } = body || {}
     if (!productId) return { status: 400, jsonBody: { error: 'productId is required' } }
 
     const fields = {}
@@ -24,6 +25,7 @@ app.http('updateProduct', {
 
     try {
       await updateProductFields(productId, fields)
+      if (clearImage) await clearProductImage(productId)
       return { status: 200, jsonBody: { ok: true, productId } }
     } catch (err) {
       context.log(`updateProduct error for ${productId}: ${err.message}`)
